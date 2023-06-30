@@ -91,10 +91,10 @@ class GUI():
             [sg.Column([[sg.Text("Masks (predicted quality)", font= subheader_font), sg.Checkbox('Visible', default=True, key='-SAM-MASKS-VISIBLE-', enable_events=True)], [sg.Listbox([], key='-SELECT-SAM-MASK-', size=(12, 3), enable_events=True), sg.Button('Add to dataset', key='-ADD-ANNOTATION-', enable_events=True)]])],
             ])      
         tools_col = [
-            [sg.Text("Dataset",font=header_font)], 
             [sg.Button('Load'), sg.Button('Save'), sg.Button('Exit')],
-            [self.dataset_display_elem],
             [sg.Text("_" * 80)],
+            [sg.Text("Dataset",font=header_font)],
+            [self.dataset_display_elem],
             [sel_img_col, anno_col, category_col],
             [sg.Text("_" * 80)],
             [sam_col],
@@ -102,7 +102,7 @@ class GUI():
             [sg.Text('Tools', font=header_font)],
             [drawing_tools_col]
             ]
-        layout = [[sg.Column(img_col, justification='center'), sg.Column(tools_col, vertical_alignment='top')]]
+        layout = [[sg.Column(img_col, justification='center', vertical_alignment='top'), sg.Column(tools_col, vertical_alignment='top')]]
         return layout
     
 
@@ -339,7 +339,10 @@ class GUI():
             for mask_index in selected_mask_indexes:
                 anno_mask = self.masks[mask_index].image
                 mask_img = self.image_for_viewer(anno_mask)
-                composit_img = cv.addWeighted(composit_img, 1.0 - self.alpha * 0.1, mask_img, self.alpha, 0)
+                composit_mask = np.zeros(composit_img.shape, dtype=np.uint8)
+                composit_mask[mask_img > 0] = composit_img[mask_img > 0]
+                weighted = cv.addWeighted(composit_mask, 1.0 - self.alpha, mask_img, self.alpha, 0)
+                composit_img[mask_img > 0] = weighted[mask_img > 0]
 
         #draw SAM masks
         if self.sam_controller.model_loaded:
@@ -349,7 +352,10 @@ class GUI():
                 if selected_mask_index != None:
                     mask_image = self.sam_controller.masks[selected_mask_index].image
                     mask_image  = self.image_for_viewer(mask_image)
-                    composit_img = cv.addWeighted(composit_img, 1.0, mask_image, self.alpha, 0)
+                    composit_mask = np.zeros(composit_img.shape, dtype=np.uint8)
+                    composit_mask[mask_image > 0] = composit_img[mask_image > 0]
+                    weighted = cv.addWeighted(composit_mask, 1.0 - self.alpha, mask_image, self.alpha, 0)
+                    composit_img[mask_image > 0] = weighted[mask_image > 0]
             if self.sam_prompts_visible:
                 prompts_image = self.image_for_viewer(self.sam_controller.prompts_image)
                 prompts_hsv = cv.cvtColor(prompts_image, cv.COLOR_RGB2HSV)
