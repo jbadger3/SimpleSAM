@@ -28,16 +28,16 @@ class GUI():
         self.masks = [] # annotation masks
         self.mask_color = (0, 255, 0)
         
+        self.graph_size = (1024, 1024) 
         self.zoom = 1
         self.lastxy = None # used to store last (x, y) when panning
         self.xoffset = 0
         self.yoffset = 0
-        self.view_size = (1024, 1024)
         
         self.graph_elem_image_id = None
         self.anno_id = None
         
-        self.pen_size = 0
+        self.pen_size = 1
         self.alpha = 0.6
 
         #SAM
@@ -70,7 +70,7 @@ class GUI():
         header_font = ("Arial Bold", 16)
         subheader_font = ("Arial Bold", 10)
 
-        self.graph_elem = sg.Graph(self.view_size, (0, self.view_size[1]), (self.view_size[0], 0), background_color='white', key='graph', enable_events=True, drag_submits=True)
+        self.graph_elem = sg.Graph((1024, 1024), (0, 1024), (1024, 0), background_color='white', key='-GRAPH-', enable_events=True, drag_submits=True, expand_x=True, expand_y=True)
         self.dataset_display_elem = sg.Text(f"Name: {self.dataset}", size=(80, 1), key ='-DATASET-NAME-ELEM-')
         img_col = [
         [sg.Text(f'Zoom: {self.zoom}', size=(10,1), key='-ZOOM-TEXT-'),sg.Text('', size=(80,1), key='-IMAGE-NAME-')],
@@ -81,7 +81,7 @@ class GUI():
         category_col = sg.Column([[sg.Text('Category')], [sg.Listbox([], key='-SELECT-CATEGORY-', size=(20, 20), enable_events=True)], [sg.Button('Add', key='-ADD-CATEGORY-'), sg.Button('Remove', key='-REMOVE-CATEGORY-')]], vertical_alignment='top')
         drawing_tools_col = sg.Column([
             [sg.Radio('Pan', 1,  key='-PAN-', default=True, enable_events=True), sg.Radio('Draw', 1,  key='-DRAW-', enable_events=True), sg.Radio('Erase', 1, key='-ERASE-', enable_events=True)],
-            [sg.vbottom(sg.Text('Pen Size')), sg.Slider(range=(0, 50), default_value=self.pen_size, resolution=1, orientation='horizontal', key='-PEN-SIZE-', enable_events=True)],
+            [sg.vbottom(sg.Text('Pen Size')), sg.Slider(range=(1, 50), default_value=self.pen_size, resolution=1, orientation='horizontal', key='-PEN-SIZE-', enable_events=True)],
             [sg.vbottom(sg.Text('Mask Alpha')),sg.Slider(range=(0, 1), default_value=self.alpha, resolution=0.1, orientation='horizontal', key='-ALPHA-', enable_events=True)]])
         sam_col = sg.Column([
             [sg.Text("SAM", font=header_font), sg.Text(f'Model: {self.sam_controller.model_name}', text_color='red', key='-MODEL-NAME-'), sg.Image(data=None, size=(10, 10), enable_events=True, background_color=None, key='-IMAGE-')],
@@ -134,7 +134,7 @@ class GUI():
                 if event in (sg.WINDOW_CLOSED, 'Exit'):
                     self.window.close()
                     break
-                elif event.startswith('graph'):
+                elif event.startswith('-GRAPH-'):
                     self.handle_graph_event(event, values)
                 elif event in functions:
                     functions[event](values)
@@ -164,7 +164,7 @@ class GUI():
 
     def handle_graph_event(self, event, values):
         if values['-PAN-']:
-            current_xy = values['graph']
+            current_xy = values['-GRAPH-']
             if self.lastxy != None:
                 detla_xy = (self.lastxy[0] - current_xy[0] ,self.lastxy[1] - current_xy[1])
                 self.pan(detla_xy)
@@ -174,14 +174,14 @@ class GUI():
                 self.lastxy = current_xy
 
         elif values['-DRAW-']:
-            point = values['graph']
+            point = values['-GRAPH-']
             self.draw(point, 1)
         elif values['-ERASE-']:
-            point = values['graph']
+            point = values['-GRAPH-']
             self.draw(point, 0)
         elif values['-BBOX-']:
-            if event == 'graph':
-                graph_point = values['graph']
+            if event == '-GRAPH-':
+                graph_point = values['-GRAPH-']
                 image_point  = self.image_point_for_graph_point(graph_point)
                 if self.box_start == None:
                     self.box_start = image_point
@@ -194,8 +194,8 @@ class GUI():
                     self.draw_composit_image_to_graph()
                 self.draw_box(self.plot_box_start, graph_point)
 
-            if event == 'graph+UP':
-                graph_point = values['graph']
+            if event == '-GRAPH-+UP':
+                graph_point = values['-GRAPH-']
                 box_end = self.image_point_for_graph_point(graph_point)
                 box = [self.box_start[0], self.box_start[1], box_end[0], box_end[1]]
                 self.sam_controller.set_box(box)
@@ -204,8 +204,8 @@ class GUI():
                 self.set_sam_masks_list()
                 self.draw_composit_image_to_graph()
 
-        elif event == 'graph+UP':
-            graph_point = values['graph']
+        elif event == '-GRAPH-+UP':
+            graph_point = values['-GRAPH-']
             image_point = self.image_point_for_graph_point(graph_point)
             if values['-ADD-AREA-']:
                 self.sam_controller.add_point(image_point, 1)
@@ -270,7 +270,6 @@ class GUI():
         images = [image for image in os.listdir(images_dir) if image.split('.')[-1] in image_extensions]
         image_id = 0
         for file_name in images:
-            print(file_name)
             file_path = os.path.join(images_dir, file_name)
             image = cv.imread(file_path)
             height = image.shape[0]
@@ -368,7 +367,7 @@ class GUI():
         x0, y0, x1, y1 = self.image_box_for_viewer()
 
         viewer_image = img[y0: y1, x0: x1, :]
-        viewer_image = cv.resize(viewer_image, self.view_size, interpolation=cv.INTER_NEAREST)
+        viewer_image = cv.resize(viewer_image, self.graph_size, interpolation=cv.INTER_NEAREST)
         return viewer_image
 
     def draw_img(self, img):
@@ -503,7 +502,15 @@ class GUI():
         self.image = cv.imread(file_path) #image is h, w, c
         self.image = cv.cvtColor(self.image, cv.COLOR_BGR2RGB)
         self.sam_controller.set_image(file_path, self.image)
+
+        self.window['-GRAPH-'].set_size((self.image.shape[1], self.image.shape[0]))
+        self.window['-GRAPH-'].change_coordinates((0, self.image.shape[0]), (self.image.shape[1], 0))
+        self.window['-GRAPH-'].Widget.configure(height=self.image.shape[0], width=self.image.shape[1])
+        self.graph_size = (self.image.shape[1], self.image.shape[0])
+        
+        
         self.draw_composit_image_to_graph()
+
         
     def update_annotations_list_element(self, annotation_index=0):
         annotations = self.coco_data.imgToAnns[self.image_id]
@@ -714,8 +721,8 @@ class GUI():
         x0, y0, x1, y1 = self.image_box_for_viewer()
         x_pixels = x1 - x0
         y_pixels = y1 - y0
-        points_per_pixel_x = self.view_size[0] / x_pixels
-        points_per_pixel_y = self.view_size[1] / y_pixels
+        points_per_pixel_x = self.graph_size[0] / x_pixels
+        points_per_pixel_y = self.graph_size[1] / y_pixels
         point = (self.xoffset + int(point[0] / points_per_pixel_x), self.yoffset + int(point[1] / points_per_pixel_y))
         return point
 
