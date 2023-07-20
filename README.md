@@ -1,7 +1,14 @@
 # SimpleSAM
 ![screenshot](media/screenshot.jpg)
 
-SimpleSAM is a self-contained annotation tool based on Meta AI's Segment Anything Model (SAM). It allows for manual 
+# Introduction
+Meta AI's [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything/) is an exciting foundational tool that became popular with the computer vision community the moment it was released.  Utilizing human supplied prompts (key points and bounding boxes), a large pretrained image transformer (ViT), and a lightweight mask decoder, SAM can do in less than a second what used to take minutes or hours by hand. A number of large annootation platforms such as [V7](https://www.v7labs.com/), [Label Studio](https://labelstud.io/), [roboflow](https://roboflow.com/), [cloudfactory](https://www.cloudfactory.com/), etc. have already added support for SAM, but these options may not fit AI shops with small budgets or those wishing to avoid web based tools.
+
+SimpleSAM is an open-source, self-contained annotation tool you can install like any other Python package.  Key features include:
+* an easy to use GUI
+* integration with SAM using keypoints, bounding boxes, or combinations of both
+* edit/create COCO formatted datasets
+* pan/zoom, and pixel level editing
 
 # Requirements
 * An NVIDIA graphics card with cuda installed
@@ -27,9 +34,9 @@ dataset_dir/
         ...
     labels.json
 ```
-*Be sure the subfolder with images is labeled 'data' and your annotations file is labeled labels.json.* SimpleSAM will complain it can't find your data if it's not.
+**Be sure the subfolder with images is labeled 'data' and your annotations file is labeled 'labels.json'.** SimpleSAM will complain it can't find your data if it's not.
 
-When you have your file structure set up use the `Load` button to select your dataset directory.  If you get an error *********
+When you have your file structure set up use the `Load` button to select your dataset directory.
 
 ## Creating a new COCO Dataset
 To make a new dataset create the following file strucutre:
@@ -41,12 +48,12 @@ dataset_dir/
 ```
 and populate the `data` directory with the images you want to annotate.
 
-When you are ready use the `Load` button and select the `data` folder containing your images.  SimpleSAM will ask you **********
+When you are ready use the `Load` button and select the dataset directory created in the previous step.  SimpleSAM will ask you if you want to create a new COCO dataset using images from the /data directory. Click Ok.
 
 ## Browsing your dataset
 ![browse section](media/dataset_section.jpg)
 
-The Dataset section gives you direct access to your underlying COCO dataset.  Here you will see three lists.  Use the `Images` list to select an image for annotation. The `Annotations` list contains all of the object labeled for a given image.  You can toggle the visibility of annotation masks using the checkbox next to the word 'Annotations'. There is also a `Remove` button below the Annotations list that you can use to remove any annotations you don't want. *CAUTION* SimpleSAM does not have an undo manager!  All changes are permanent.  The last list shows all of the categories currently present in your dataset.  If you are starting from scratch this list might be blank.  You can add or remove categories at will using the corresponding buttons below the list.
+The Dataset section gives you direct access to your underlying COCO dataset.  Here you will see three lists.  Use the `Images` list to select an image for annotation. The `Annotations` list contains all of the objects labeled for a given image.  You can toggle the visibility of annotation masks using the checkbox next to the word 'Annotations'. There is also a `Remove` button below the Annotations list that you can use to remove any annotations you don't want. *CAUTION* SimpleSAM does not have an undo manager!  All changes are permanent.  The last list shows all of the categories currently present in your dataset.  If you are starting from scratch this list might be blank.  You can add or remove categories at will using the corresponding buttons below the list.
 
 ## Using SAM
 ![SAM section](media/sam_section.jpg)
@@ -60,19 +67,33 @@ To add a positive area click the `+ Add area` radio button, move your mouse over
 ![add and subtract](media/add_and_subtract.jpg)
 
 To use a bounding box as a prompt select the `BBox` radio button.  Click and drag over the region you wish to annotate.  Releasing the mouse will generate a new set of candidate masks just like the area propmpting tool.   
-
+![bbox](media/bbox.jpg)
 
 If at anytime you make a mistake or don't like the current annotation results, simply click the 'Reset' button to start over.
 
 ## Adding an annotation to your dataset
 Once you have a mask that you want to add to your dataset click the `Add to dataset` button.  The new mask will be added to the dataset section under 'Annotations' and automatically highlighted and given an id.  To finish, select an appropriate category or add a new one if needed.
 
+## Saving
+SimpleSAM does not have undo management nor an automatic saving feature, so be sure to save often and especially before exiting the program!
 
 
 # Acknowledgements
+* Meta AI. Thanks for making such a powerful tool open-source
+* [PySimpleGUI](https://www.pysimplegui.org) powers the UI of SimpleSAM.  Tip of my hat to the author for making a wonderful tool.
+* All images from the 'Usage' section were obtained from the [Wikimedia Commons](https://commons.wikimedia.org/).  Thanks to the originating authors for sharing their photos.
 
-# Resources
-# Resources used for troubleshooting PySimpleGUI related tasks
-# https://stackoverflow.com/questions/41656176/tkinter-canvas-zoom-move-pan
-# https://github.com/PySimpleGUI/PySimpleGUI/issues/3054
-# https://stackoverflow.com/questions/68069438/pysimplegui-tk-drawing-opencv-image-into-sg-graph-efficiently
+
+| File | Author |
+|----- | ------ |
+| Cat_and_Dog_Game.jpg | Faypearse, CC BY-SA 4.0, via Wikimedia Commons |
+| cat_sitting_down_on_the_branch_of_tree.jpg | KKPCW, CC BY-SA 4.0, via Wikimedia Commons |
+| dalmation_puppies.jpg | Carlos Estrada, CC BY-SA 3.0, via Wikimedia Commons |
+
+[CC BY-SA 4.0 license](https://creativecommons.org/licenses/by-sa/4.0)
+
+[CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0)
+
+# License
+SimpleSAM has a liberal MIT [license](LICENSE).  If you use SimpleSAM in a project or as part of published research a citation with a link back to this repo would be much appreciated.
+
