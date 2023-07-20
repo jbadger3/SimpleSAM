@@ -228,7 +228,9 @@ class GUI():
         self.coco_dir = coco_dir
         #validate coco dataset exists and fits expected format
         images_dir = os.path.join(coco_dir, 'data')
-        assert os.path.exists(images_dir), '\'data\' folder not found in supplied directory.'
+        if not os.path.exists(images_dir):
+            sg.popup_error('\'data\' folder not found in supplied directory!', title='Error !')
+            return
         annotation_file = os.path.join(coco_dir, 'labels.json')
         if not os.path.exists(annotation_file):
             create_coco_dataset = sg.popup_ok_cancel('No file named labels.json found','Create a new COCO dataset from images in /data folder?.', title='Create new COCO dataset?')
@@ -267,7 +269,7 @@ class GUI():
             'jp2', 'png', 'pbm', 'ppm','pxm','pnm',
             'tiff','tif', 'exr', 'hdr', 'pic']
         images_dir = os.path.join(self.coco_dir, 'data')
-        images = [image for image in os.listdir(images_dir) if image.split('.')[-1] in image_extensions]
+        images = [image for image in os.listdir(images_dir) if image.split('.')[-1].lower() in image_extensions]
         image_id = 0
         for file_name in images:
             file_path = os.path.join(images_dir, file_name)
